@@ -34,7 +34,7 @@ final class AudioLanguageMetadata {
     static LibraryMatcher.Match apply(LibraryMatcher.Match match,Result result){
         if(result.verdict==Verdict.OTHER_LANGUAGES)return null;
         if(result.verdict==Verdict.ROMANIAN)return new LibraryMatcher.Match(match.torrent,match.file,match.name,"RO Dub (audio metadata)");
-        return match; // Preserve user-selected trusted-group fallback only when unknown.
+        return match.metadataRequired?null:match; // Unknown language needs existing filename/group evidence.
     }
     static Result inspect(String url){
         try{

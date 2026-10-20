@@ -1,6 +1,6 @@
 {
   "limits": [
-    "Authenticated existing Library URL/media/audio checks passed on desktop; v5 TV behavior and authenticated cached-only acquisition remain unverified.",
+    "Authenticated existing Library URL/media/audio checks passed on desktop; v7 TV behavior and authenticated cached-only acquisition remain unverified.",
     "Matroska audio language tags inspected in bounded 256 KiB headers; unknown/unsupported metadata retains filename/group fallback; no speech recognition.",
     "Cached-only registrations may appear in the TorBox Library. No uncached fallback.",
     "Byte-range check cannot identify every error video or guarantee playback."
@@ -43,15 +43,15 @@
   ],
   "cachedOnlyMultipartBuilderTested": true,
   "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
-  "matcherAssertions": 26,
-  "packageSha256": "21679470487DFAA9B28CFD6BD185BBEBD942A613E0303D8A25169D9E6B69A21E",
-  "version": 6,
-  "cachedDiscoveryAssertions": 25,
+  "matcherAssertions": 30,
+  "packageSha256": "3DFF46FE147E031AA11DE9BD68F24B6408A5300DBB7B177EDA1475069CDD2ACC",
+  "version": 7,
+  "cachedDiscoveryAssertions": 30,
   "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
   "playbackTested": false,
   "userReportedV1SetupConnected": true,
-  "testedAt": "2026-10-20T13:41:40.5926874Z",
+  "testedAt": "2026-10-20T13:46:34.6058405Z",
   "realCredentialUsedByDeveloper": true,
   "accountMutationsByDeveloper": 0,
   "linkContractAssertions": 12,
@@ -64,7 +64,7 @@
     "accountMutations": 0,
     "playback": false
   },
-  "audioMetadataAssertions": 17,
+  "audioMetadataAssertions": 20,
   "userReportedV4Playback": true,
   "authenticatedAudioCheck": {
     "runtime": "Desktop JVM using production filter",
@@ -78,13 +78,18 @@
   },
   "authenticatedBlueyReadOnlyCheck": {
     "title": "Bluey S1E1",
-    "matchingLibraryFiles": 2,
-    "romanianAudioTags": 2,
-    "mediaHeadersPassed": 2,
+    "matchingLibraryFiles": 8,
+    "romanianAudioTags": 4,
+    "mediaHeadersPassed": 7,
     "accountMutations": 0,
     "playback": false,
     "publicRawCandidates": 373,
-    "eligibleAfterEpisodeFiltering": 0,
-    "runtime": "Desktop JVM using production filter"
+    "eligibleAfterEpisodeFiltering": 17,
+    "runtime": "Desktop JVM using production filter",
+    "newlyAdmittedGroups": [
+      "TGS",
+      "OldT"
+    ],
+    "previouslyExcludedByGroupFilter": 2
   }
 }

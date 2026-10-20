@@ -12,7 +12,7 @@ public final class CachedDiscoveryTest {
  static JSONObject query()throws Exception{return new JSONObject().put("movieName","Peppa Pig").put("season",4).put("episode",15);}
  static JSONObject file(int id,String name)throws Exception{return new JSONObject().put("id",id).put("name",name).put("size",36500000);}
  static final class Fake extends CachedDiscoveryResolver.Gateway {
-  JSONObject cache,actual;int claims,linkCalls,emitted;long usedFile=-1;boolean claimFails,probeFails,englishAudio;
+  JSONObject cache,actual;int claims,linkCalls,emitted;long usedFile=-1;boolean claimFails,probeFails,englishAudio,romanianAudio;
   Fake()throws Exception{
    cache=new JSONObject().put(HASH,new JSONObject().put("hash",HASH).put("name",TITLE).put("files",new JSONArray().put(file(777,FILE))));
    actual=new JSONObject().put("id",13).put("hash",HASH).put("name",TITLE).put("download_finished",true).put("download_present",true).put("files",new JSONArray().put(file(42,FILE)));
@@ -22,7 +22,7 @@ public final class CachedDiscoveryTest {
   JSONObject item(long id){return actual;}
   String link(long torrent,long file){linkCalls++;usedFile=file;return "https://example.invalid/video.mkv";}
   void probeMedia(String url)throws Exception{if(probeFails)throw new Exception("Media error");}
-  LibraryMatcher.Match audioMatch(LibraryMatcher.Match m,String url){return englishAudio?null:m;}
+  LibraryMatcher.Match audioMatch(LibraryMatcher.Match m,String url){return AudioLanguageMetadata.apply(m,englishAudio?new AudioLanguageMetadata.Result(Collections.singletonList("eng"),true):romanianAudio?new AudioLanguageMetadata.Result(Collections.singletonList("ron"),true):AudioLanguageMetadata.unknown());}
   void check(){}
  }
  static CachedDiscoveryResolver.Stats run(Fake f)throws Exception{return CachedDiscoveryResolver.resolve(Collections.singletonList(new TorrentDiscovery.Candidate(HASH,TITLE)),query(),"RODubbed",f,3,new HashSet<>(),(m,u)->f.emitted++);}
@@ -52,6 +52,12 @@ public final class CachedDiscoveryTest {
   check(TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.COMPLETE.RODubbed"),bluey,"RODubbed"),"complete-series pack still reaches exact-file validation");
   check(TorrentDiscovery.episodeCandidate("Bluey.S01-S03.COMPLETE.RODubbed",2,1),"season inside multi-season pack range remains eligible");
   check(!TorrentDiscovery.episodeCandidate("Bluey.S01-S03.COMPLETE.RODubbed",4,1),"season outside pack range rejected");
+  check(TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.2018.S01E01.1080p-TGS"),bluey,"RODubbed"),"untrusted exact candidate reaches cache/metadata validation");
+  check(TorrentDiscovery.audioPriority("Bluey.S01.RODubbed","RODubbed")<TorrentDiscovery.audioPriority("Bluey.S01-playWEB","playWEB"),"filename evidence before group fallback");
+  check(TorrentDiscovery.audioPriority("Bluey.S01-playWEB","playWEB")<TorrentDiscovery.audioPriority("Bluey.S01-TGS","playWEB"),"group fallback before metadata-required candidates");
+  Fake untrusted=new Fake();untrusted.cache.getJSONObject(HASH).put("name","Peppa.Pig.S04-TGS").getJSONArray("files").getJSONObject(0).put("name","Peppa.Pig.S04E15-TGS.mkv");untrusted.actual.put("name","Peppa.Pig.S04-TGS").getJSONArray("files").getJSONObject(0).put("name","Peppa.Pig.S04E15-TGS.mkv");
+  check(run(untrusted).links==0,"metadata-required cached file with unknown audio never emitted");
+  untrusted.romanianAudio=true;check(run(untrusted).links==1,"metadata Romanian admits exact cached file outside group list");
   System.out.println("Cached discovery: "+assertions+" checks passed; fake account gateway, no credentials or real account operations.");
  }
 }

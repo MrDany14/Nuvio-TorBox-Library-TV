@@ -39,7 +39,7 @@ final class CachedDiscoveryResolver {
             if(cache.has("cached")&&!cache.optBoolean("cached"))continue;
             if(!cache.optString("hash",c.hash).equalsIgnoreCase(c.hash))continue;
             JSONObject preview=cachedItem(cache,c);if(preview==null)continue;
-            if(LibraryMatcher.find(preview,query,groups).isEmpty())continue;
+            if(LibraryMatcher.findForMetadata(preview,query,groups).isEmpty())continue;
             stats.exactFiles++;attempts++;
             String stage="Cached-only registration";
             try {
@@ -48,7 +48,7 @@ final class CachedDiscoveryResolver {
                 stage="Registered item refresh";
                 JSONObject actual=api.item(id);
                 if(!actual.optString("hash","").equalsIgnoreCase(c.hash)||actual.optLong("id",-1)!=id){stats.failure="Registered hash/ID mismatch";continue;}
-                List<LibraryMatcher.Match> matches=LibraryMatcher.find(actual,query,groups);
+                List<LibraryMatcher.Match> matches=LibraryMatcher.findForMetadata(actual,query,groups);
                 if(matches.isEmpty())stats.failure="Registered item is not ready or exact file no longer matches";
                 for(LibraryMatcher.Match m:matches){
                     if(stats.links>=limit)break;
@@ -56,7 +56,7 @@ final class CachedDiscoveryResolver {
                     stage="Download-link API";String url=api.link(m.torrent,m.file);stats.obtained++;
                     stage="Media probe";api.probeMedia(url);stats.media++;
                     stage="Audio metadata";LibraryMatcher.Match audioMatch=api.audioMatch(m,url);
-                    if(audioMatch==null){stats.failure="Audio metadata: no Romanian audio track";continue;}
+                    if(audioMatch==null){stats.failure="Audio metadata: Romanian audio not established";continue;}
                     stage="Nuvio link callback";emit.stream(audioMatch,url);returned.add(identity);stats.links++;
                 }
             }catch(Exception error){stats.failed++;stats.failure=stage+": "+TorBoxClient.safeError(error);}

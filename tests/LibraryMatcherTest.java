@@ -36,6 +36,12 @@ public final class LibraryMatcherTest {
         JSONObject minions=new JSONObject().put("movieName","Minions & Monsters").put("releaseYear",2026);
         check(LibraryMatcher.find(item("Minions.and.Monsters.2026.1080p-playWEB","Minions.and.Monsters.2026.1080p-playWEB.mkv"),minions,"playWEB").size()==1,"ampersand title matches and release");
         check(LibraryMatcher.find(item("Minions.&amp;.Monsters.2026.1080p-playWEB","Minions.&.Monsters.2026.1080p-playWEB.mkv"),minions,"playWEB").size()==1,"HTML ampersand title matches");
+        JSONObject bluey=new JSONObject().put("movieName","Bluey").put("season",1).put("episode",1);
+        JSONObject tgs=item("Bluey.2018.S01.1080p-TGS","Bluey.2018.S01E01.1080p-TGS.mkv");
+        check(LibraryMatcher.find(tgs,bluey,"RODubbed").isEmpty(),"untrusted group is not filename evidence");
+        check(LibraryMatcher.findForMetadata(tgs,bluey,"RODubbed").get(0).metadataRequired,"exact untrusted group reaches audio inspection");
+        check(LibraryMatcher.findForMetadata(tgs,query(1,1),"RODubbed").isEmpty(),"broader metadata inspection retains exact title requirement");
+        check(LibraryMatcher.findForMetadata(tgs,new JSONObject(bluey.toString()).put("episode",2),"RODubbed").isEmpty(),"broader metadata inspection retains exact episode requirement");
         System.out.println("Library matcher: "+assertions+" checks passed; synthetic fixtures only, no credentials or network.");
     }
 }

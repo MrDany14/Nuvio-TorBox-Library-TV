@@ -50,7 +50,7 @@ final class TorrentDiscovery {
         boolean series=query.optInt("season",-1)>=0&&query.optInt("episode",-1)>0;
         if(!series&&query.optInt("releaseYear",0)<=0)return false;
         if(series&&!episodeCandidate(c.title,query.optInt("season"),query.optInt("episode")))return false;
-        return LibraryMatcher.title(c.title,aliases,query.optInt("releaseYear",0),series)&&LibraryMatcher.audio(c.title,groups)!=null;
+        return LibraryMatcher.title(c.title,aliases,query.optInt("releaseYear",0),series);
     }
     /** Exclude explicit wrong episodes/seasons BEFORE the bounded cache shortlist.
      * Season and complete-series packs remain candidates for exact-file checks. */
@@ -86,8 +86,9 @@ final class TorrentDiscovery {
                 catch(Exception ignored){result.failed++;}
             }
         }finally{pool.shutdownNow();}
-        Collections.sort(result.candidates,(a,b)->Boolean.compare("Possible RO Dub".equals(LibraryMatcher.audio(a.title,groups)),"Possible RO Dub".equals(LibraryMatcher.audio(b.title,groups))));
+        Collections.sort(result.candidates,(a,b)->Integer.compare(audioPriority(a.title,groups),audioPriority(b.title,groups)));
         if(result.candidates.size()>50)result.candidates.subList(50,result.candidates.size()).clear();
         return result;
     }
+    static int audioPriority(String title,String groups){String evidence=LibraryMatcher.audio(title,groups);return evidence==null?2:"Possible RO Dub".equals(evidence)?1:0;}
 }

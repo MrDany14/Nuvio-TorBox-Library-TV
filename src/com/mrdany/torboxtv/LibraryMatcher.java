@@ -49,10 +49,17 @@ final class LibraryMatcher {
         return null;
     }
     static final class Match {
-        final long torrent,file;final String name,confidence;
-        Match(long t,long f,String n,String c){torrent=t;file=f;name=n;confidence=c;}
+        final long torrent,file;final String name,confidence;final boolean metadataRequired;
+        Match(long t,long f,String n,String c){this(t,f,n,c,false);}
+        Match(long t,long f,String n,String c,boolean required){torrent=t;file=f;name=n;confidence=c;metadataRequired=required;}
     }
     static List<Match> find(JSONObject item,JSONObject query,String groups)throws Exception {
+        return find(item,query,groups,false);
+    }
+    static List<Match> findForMetadata(JSONObject item,JSONObject query,String groups)throws Exception {
+        return find(item,query,groups,true);
+    }
+    private static List<Match> find(JSONObject item,JSONObject query,String groups,boolean includeUnknown)throws Exception {
         List<Match> out=new ArrayList<>();if(!ready(item))return out;
         List<String> aliases=new ArrayList<>();for(String k:Arrays.asList("movieName","originalTitle","localTitle")){String s=query.optString(k,"");if(!s.isEmpty())aliases.add(s);}
         boolean series=query.optInt("season",-1)>=0&&query.optInt("episode",-1)>0;
@@ -67,8 +74,8 @@ final class LibraryMatcher {
             if(series&&!episode(name,query.getInt("season"),query.getInt("episode")))continue;
             if(series&&conflictingSeriesTitle(name,aliases))continue;
             if(!series&&Pattern.compile("(?i)(?<![a-z0-9])s\\d{1,2}e\\d+").matcher(name).find())continue;
-            String ro=audio(pack+" "+name,groups);if(ro==null)continue;
-            out.add(new Match(item.getLong("id"),f.getLong("id"),name,ro));
+            String ro=audio(pack+" "+name,groups);if(ro==null&&!includeUnknown)continue;
+            out.add(new Match(item.getLong("id"),f.getLong("id"),name,ro==null?"Audio metadata required":ro,ro==null));
         }
         // Multi-file movie packs without per-file title identity are ambiguous.
         if(!series&&out.size()>1)out.removeIf(m->!title(m.name,aliases,year,false));

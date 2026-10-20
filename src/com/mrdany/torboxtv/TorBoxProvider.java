@@ -53,10 +53,10 @@ public final class TorBoxProvider extends TmdbProvider {
                 for(int i=0;i<page.length()&&count<3;i++){
                     JSONObject item=page.getJSONObject(i);long id=item.optLong("id",-1);if(id<0||!seen.add(id))continue;newItems++;
                     scanned++;
-                    List<LibraryMatcher.Match> found=LibraryMatcher.find(item,query,groups);if(found.isEmpty())continue;
+                    List<LibraryMatcher.Match> found=LibraryMatcher.findForMetadata(item,query,groups);if(found.isEmpty())continue;
                     candidates+=found.size();
                     // Confirm current per-item completion/files rather than trusting an index flag.
-                    found=LibraryMatcher.find(client.item(id),query,groups);
+                    found=LibraryMatcher.findForMetadata(client.item(id),query,groups);
                     if(found.isEmpty())lastFailure="Library refresh: item not ready or exact file no longer matches";
                     for(LibraryMatcher.Match match:found){
                         if(count>=3)break;
@@ -64,7 +64,7 @@ public final class TorBoxProvider extends TmdbProvider {
                         try{client.check();String url=client.link(match.torrent,match.file);obtained++;
                             stage="Media probe";TorBoxClient.probe(url);probed++;
                             stage="Audio metadata";LibraryMatcher.Match audioMatch=client.audioMatch(match,url);
-                            if(audioMatch==null){lastFailure="Audio metadata: no Romanian audio track";continue;}
+                            if(audioMatch==null){lastFailure="Audio metadata: Romanian audio not established";continue;}
                             stage="Nuvio link callback";callback.invoke(link(audioMatch,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
                         catch(Exception error){lastFailure=stage+": "+TorBoxClient.safeError(error);}
                     }
@@ -117,7 +117,7 @@ public final class TorBoxProvider extends TmdbProvider {
         a.runOnUiThread(()->new android.app.AlertDialog.Builder(a).setTitle("TorBox Library diagnostic").setMessage(message).setPositiveButton("OK",null).show());
     }
     static String summary(String title,int scanned,int candidates,int links,String outcome,int discovered,int eligible,int cached,int failed){
-        return title+"\nLibrary items checked (up to 3000): "+scanned+"\nPublic index candidates: "+discovered+"\nEligible Romanian candidates: "+eligible+"\nCached candidates: "+cached+"\nMatching RO file candidates: "+candidates+"\nVerified links: "+links+"\nDiscovery service failures: "+failed+"\n"+outcome;
+        return title+"\nLibrary items checked (up to 3000): "+scanned+"\nPublic index candidates: "+discovered+"\nShortlisted exact-title candidates: "+eligible+"\nCached candidates: "+cached+"\nMatching file candidates: "+candidates+"\nVerified links: "+links+"\nDiscovery service failures: "+failed+"\n"+outcome;
     }
     static Object link(LibraryMatcher.Match m,String url)throws Exception {
         String lower=m.name.toLowerCase(Locale.ROOT);int quality=lower.contains("2160p")?2160:lower.contains("1080p")?1080:lower.contains("720p")?720:0;

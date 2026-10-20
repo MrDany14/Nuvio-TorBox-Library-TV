@@ -32,6 +32,10 @@ public final class AudioLanguageMetadataTest {
         check(AudioLanguageMetadata.apply(match,AudioLanguageMetadata.unknown())==match,"trusted group fallback preserved for missing metadata");
         check(AudioLanguageMetadata.apply(match,AudioLanguageMetadata.parse(mkv(track(2,"eng",null))))==null,"known English overrides release-group fallback");
         check(AudioLanguageMetadata.apply(match,AudioLanguageMetadata.parse(mkv(track(2,"ron",null)))).confidence.equals("RO Dub (audio metadata)"),"metadata Romanian receives distinct label");
+        LibraryMatcher.Match untrusted=new LibraryMatcher.Match(1,2,"Bluey.S01E01-TGS.mkv","Audio metadata required",true);
+        check(AudioLanguageMetadata.apply(untrusted,AudioLanguageMetadata.unknown())==null,"untrusted file cannot use unknown-metadata fallback");
+        check(AudioLanguageMetadata.apply(untrusted,AudioLanguageMetadata.parse(mkv(track(2,"rum",null))))!=null,"Romanian track admits an otherwise untrusted group");
+        check(AudioLanguageMetadata.apply(untrusted,AudioLanguageMetadata.parse(mkv(track(2,"eng",null))))==null,"untrusted English file rejected");
         System.out.println("Audio language metadata: "+assertions+" checks passed; synthetic containers, no credentials or network.");
     }
 }
