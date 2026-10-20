@@ -1,16 +1,16 @@
 [
   {
     "url": "https://raw.githubusercontent.com/MrDany14/Nuvio-TorBox-Library-TV/main/TorBoxLibraryTV.cs3",
-    "name": "TorBox Library [TV Test]",
+    "name": "TorBox RoDub Finder [TV Test]",
     "authors": [
       "MrDany14"
     ],
     "status": 1,
     "repositoryUrl": "https://github.com/MrDany14/Nuvio-TorBox-Library-TV",
-    "version": 2,
+    "version": 3,
     "internalName": "TorBoxLibraryTVTest",
-    "fileSize": 18213,
-    "description": "Exact Library file matching. Test opens private key setup. No torrent creation.",
+    "fileSize": 27039,
+    "description": "Library plus Torrentio/Knaben discovery. Exact files, cached-only TorBox registration, verified media links.",
     "tvTypes": [
       "Movie",
       "TvSeries"

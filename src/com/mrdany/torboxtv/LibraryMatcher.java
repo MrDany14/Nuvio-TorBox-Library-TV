@@ -7,7 +7,7 @@ import java.util.regex.*;
 
 /** Conservative filename matching: ambiguity produces no result, never a fallback file. */
 final class LibraryMatcher {
-    static String normalize(String s){return Normalizer.normalize(s,Normalizer.Form.NFD).replaceAll("\\p{M}","").toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+"," ").trim().replaceAll(" +"," ");}
+    static String normalize(String s){return Normalizer.normalize(s,Normalizer.Form.NFD).replaceAll("\\p{M}","").toLowerCase(Locale.ROOT).replace("&amp;"," and ").replace("&"," and ").replaceAll("[^a-z0-9]+"," ").trim().replaceAll(" +"," ");}
     static boolean ready(JSONObject item){return item.optBoolean("download_finished",false)&&item.optBoolean("download_present",false)&&item.optLong("id",-1)>=0;}
     static boolean episode(String path,int season,int episode){
         Matcher m=Pattern.compile("(?i)(?<![a-z0-9])s(\\d{1,2})[ ._-]*e(\\d{1,3})(?![0-9])").matcher(path);
@@ -36,6 +36,7 @@ final class LibraryMatcher {
         if(!marker.find())return false;
         String prefix=normalize(base.substring(0,marker.start()));
         if(prefix.isEmpty())return false; // S01E01.mkv inherits its verified pack title.
+        prefix=prefix.replaceFirst(" (?:19|20)[0-9]{2}$","");
         for(String alias:aliases)if(prefix.equals(normalize(alias)))return false;
         return true;
     }

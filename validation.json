@@ -1,24 +1,57 @@
 {
+  "accountOperationsByDeveloper": 0,
   "limits": [
-    "Filename Romanian dubbing declarations or possible trusted-group fallback; no audio inspection.",
-    "Media range check is not playback and cannot detect all error videos.",
-    "Conservative exact matching may omit differently numbered or ambiguous files."
+    "Public candidates are not cached streams; authenticated cache/registration/media checks are pending user device test.",
+    "Filename dubbing declarations and possible trusted-group fallback, no audio-track inspection.",
+    "Cached-only registrations may appear in the TorBox Library. No uncached fallback.",
+    "Byte-range check cannot identify every error video or guarantee playback."
   ],
-  "realCredentialUsed": false,
-  "maskedPasswordField": true,
-  "testedAt": "2026-10-20T10:55:43.3622969Z",
-  "packageSha256": "DC95BF16CBFEC5603CC356F84FE62EA1E538C3C867C6B0F27ADF567624548F78",
-  "matcherAssertions": 22,
-  "dummyKeyRejectedAndInputCleared": true,
-  "setupDialogInsideNuvio": true,
-  "nativeRepositoryInstalled": true,
+  "keySharedWithDiscoveryIndexes": false,
+  "publicDiscovery": [
+    {
+      "tmdbID": 1315772,
+      "title": "Minions & Monsters",
+      "imdbID": "tt32890033",
+      "season": -1,
+      "episode": -1,
+      "received": 239,
+      "eligible": 1,
+      "serviceFailures": 0,
+      "accountOperations": 0
+    },
+    {
+      "tmdbID": 12225,
+      "title": "Peppa Pig",
+      "imdbID": "tt0426769",
+      "season": 4,
+      "episode": 15,
+      "received": 132,
+      "eligible": 15,
+      "serviceFailures": 0,
+      "accountOperations": 0
+    },
+    {
+      "tmdbID": 127633,
+      "title": "Mickey Mouse Funhouse",
+      "imdbID": "tt13262134",
+      "season": 1,
+      "episode": 1,
+      "received": 40,
+      "eligible": 0,
+      "serviceFailures": 0,
+      "accountOperations": 0
+    }
+  ],
+  "cachedOnlyMultipartBuilderTested": true,
+  "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
+  "matcherAssertions": 26,
+  "packageSha256": "2F363C1FA3E69CA3D26ED71A92D03730D820AF9540ED9D82F92E32236000FE33",
+  "version": 3,
+  "cachedDiscoveryAssertions": 17,
+  "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
-  "authenticatedLibraryTested": false,
   "playbackTested": false,
-  "embeddedMetadataCredential": false,
-  "nuvioSdkMovieMetadataProbe": "Passed: Fight Club (1999), native Android runtime, Nuvio SDK, no embedded metadata credential.",
-  "version": 2,
-  "diagnosticMovieMetadata": "Passed in native Android runtime: Matrix TMDB 603 completed to 1999 without TorBox credentials.",
-  "userReportedSetupConnected": true,
-  "scope": "Own torrent Library only; global discovery remains unimplemented."
+  "userReportedV1SetupConnected": true,
+  "testedAt": "2026-10-20T11:41:36.1551674Z",
+  "realCredentialUsedByDeveloper": false
 }

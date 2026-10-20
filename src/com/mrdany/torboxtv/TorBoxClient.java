@@ -6,22 +6,26 @@ import java.nio.charset.StandardCharsets;
 import org.json.*;
 
 /** Credentials are sent only to the fixed TorBox API, never to media hosts. */
-final class TorBoxClient {
+final class TorBoxClient extends CachedDiscoveryResolver.Gateway {
     static final class AuthenticationFailure extends IOException {}
     private final String key;
     final long deadline=System.nanoTime()+40000000000L;
     TorBoxClient(String key){this.key=key;}
     void check() throws IOException {if(Thread.currentThread().isInterrupted()||System.nanoTime()>deadline)throw new IOException("TorBox lookup timed out");}
     JSONObject api(String path,boolean bearer) throws Exception {
+        return api(path,bearer,null,null);
+    }
+    JSONObject api(String path,boolean bearer,byte[] body,String contentType) throws Exception {
         check();
         HttpURLConnection c=(HttpURLConnection)new URL("https://api.torbox.app/v1/api/torrents/"+path).openConnection();
         c.setInstanceFollowRedirects(false);c.setConnectTimeout(7000);c.setReadTimeout(10000);
         c.setRequestProperty("Accept","application/json");
         if(bearer)c.setRequestProperty("Authorization","Bearer "+key);
         try {
+            if(body!=null){c.setRequestMethod("POST");c.setDoOutput(true);c.setRequestProperty("Content-Type",contentType);c.setFixedLengthStreamingMode(body.length);try(OutputStream out=c.getOutputStream()){out.write(body);}}
             int status=c.getResponseCode();
             if(status==401||status==403)throw new AuthenticationFailure();
-            if(status!=200)throw new IOException("TorBox API request failed");
+            if(status!=200&&status!=201)throw new IOException("TorBox API request failed");
             ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[8192];int n;
             try(InputStream in=c.getInputStream()){while((n=in.read(b))!=-1){check();out.write(b,0,n);if(out.size()>24*1024*1024)throw new IOException("Library response too large");}}
             JSONObject result=new JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8));
@@ -32,6 +36,26 @@ final class TorBoxClient {
     JSONArray page(int offset,int limit)throws Exception {
         Object d=api("mylist?bypass_cache=true&offset="+offset+"&limit="+limit,true).opt("data");
         if(!(d instanceof JSONArray))throw new IOException("Unexpected Library response");return (JSONArray)d;
+    }
+    JSONObject cached(java.util.List<String> hashes)throws Exception {
+        StringBuilder query=new StringBuilder("checkcached?format=object&list_files=true");
+        for(String hash:hashes){if(!hash.matches("[0-9a-f]{40}"))throw new IOException("Invalid hash");query.append("&hash=").append(hash);}
+        Object data=api(query.toString(),true).opt("data");
+        if(!(data instanceof JSONObject))throw new IOException("Unexpected cache response");
+        return (JSONObject)data;
+    }
+    static byte[] cachedOnlyBody(String hash,String boundary)throws Exception {
+        if(!hash.matches("[0-9a-f]{40}")||!boundary.matches("[A-Za-z0-9]+"))throw new IOException("Invalid cached request");
+        String[][] fields={{"magnet","magnet:?xt=urn:btih:"+hash},{"add_only_if_cached","true"},{"allow_zip","false"},{"as_queued","false"}};
+        StringBuilder body=new StringBuilder();
+        for(String[] field:fields)body.append("--").append(boundary).append("\r\nContent-Disposition: form-data; name=\"").append(field[0]).append("\"\r\n\r\n").append(field[1]).append("\r\n");
+        return body.append("--").append(boundary).append("--\r\n").toString().getBytes(StandardCharsets.UTF_8);
+    }
+    long claimCached(String hash)throws Exception {
+        String boundary="TorBoxTV"+java.util.UUID.randomUUID().toString().replace("-","");
+        Object raw=api("createtorrent",true,cachedOnlyBody(hash,boundary),"multipart/form-data; boundary="+boundary).opt("data");
+        if(!(raw instanceof JSONObject))throw new IOException("Cached item unavailable");JSONObject data=(JSONObject)raw;
+        long id=data.optLong("torrent_id",data.optLong("id",-1));if(id<0)throw new IOException("No item ID");return id;
     }
     JSONObject item(long id)throws Exception {
         Object d=api("mylist?bypass_cache=true&id="+id,true).opt("data");

@@ -6,7 +6,7 @@ import com.lagradost.cloudstream3.metaproviders.TmdbProvider;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-/** Separate native TV provider. No service, web hosting or torrent creation. */
+/** Separate native TV provider. No hosting service; acquisition is cached-only. */
 public final class TorBoxPlugin {
     static Context app;
     static WeakReference<Activity> activity = new WeakReference<>(null);

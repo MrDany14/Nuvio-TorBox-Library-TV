@@ -31,6 +31,11 @@ public final class LibraryMatcherTest {
         check(LibraryMatcher.find(item("Mickey.Mouse.Funhouse.S01.RODubbed","Mickey.Mouse.Clubhouse.S01E01.mkv"),funhouse,"").isEmpty(),"conflicting filename overrides pack title");
         check(LibraryMatcher.find(item("Mickey.Mouse.Funhouse.S01.RODubbed","Mickey.Mouse.Funhouse.S01E01.mkv"),funhouse,"").size()==1,"correct Funhouse title accepted");
         check(LibraryMatcher.find(item("Mickey.Mouse.Funhouse.S01.RODubbed","S01E01.mkv"),funhouse,"").size()==1,"episode-only filename inherits exact pack");
+        check(LibraryMatcher.find(item("Mickey.Mouse.Funhouse.2021.S01.RODubbed","Mickey.Mouse.Funhouse.2021.S01E01.mkv"),funhouse,"").size()==1,"series filename may include release year");
+        check(LibraryMatcher.find(item("Mickey.Mouse.Funhouse.2021.S01.RODubbed","Mickey.Mouse.Clubhouse.2006.S01E01.mkv"),funhouse,"").isEmpty(),"year does not hide conflicting series title");
+        JSONObject minions=new JSONObject().put("movieName","Minions & Monsters").put("releaseYear",2026);
+        check(LibraryMatcher.find(item("Minions.and.Monsters.2026.1080p-playWEB","Minions.and.Monsters.2026.1080p-playWEB.mkv"),minions,"playWEB").size()==1,"ampersand title matches and release");
+        check(LibraryMatcher.find(item("Minions.&amp;.Monsters.2026.1080p-playWEB","Minions.&.Monsters.2026.1080p-playWEB.mkv"),minions,"playWEB").size()==1,"HTML ampersand title matches");
         System.out.println("Library matcher: "+assertions+" checks passed; synthetic fixtures only, no credentials or network.");
     }
 }

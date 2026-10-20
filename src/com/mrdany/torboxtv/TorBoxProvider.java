@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class TorBoxProvider extends TmdbProvider {
-    public String getName(){return "TorBox Library [TV Test]";}
+    public String getName(){return "TorBox RoDub Finder [TV Test]";}
     public String getMainUrl(){return "https://torbox.app";}
     public String getLang(){return "ro";}
     public boolean getHasMainPage(){return false;}
@@ -25,8 +25,9 @@ public final class TorBoxProvider extends TmdbProvider {
         }catch(Exception e){return null;}
     }
     public Object loadLinks(String data,boolean casting,Function1 subtitles,Function1 callback,Continuation continuation){
-        int count=0,scanned=0,candidates=0; boolean diagnostic=false;
+        int count=0,scanned=0,candidates=0,discovered=0,eligible=0,cached=0,discoveryFailed=0; boolean diagnostic=false;
         String requested="",outcome="Lookup finished";
+        ExecutorService discoveryPool=null;Future<TorrentDiscovery.Result> search=null;
         try {
             String key=new PrivateKeyStore(TorBoxPlugin.app).read();
             if(key.isEmpty()){TorBoxSetup.show();return false;}
@@ -40,8 +41,13 @@ public final class TorBoxProvider extends TmdbProvider {
             requested=query.optString("movieName",requested)+(query.optInt("releaseYear",0)>0?" ("+query.optInt("releaseYear")+")":"");
             outcome="Library request failed or timed out";
             String groups=TorBoxPlugin.app.getSharedPreferences("torbox_tv_options",0).getString("groups",TorBoxSetup.GROUPS);
+            final JSONObject searchQuery=new JSONObject(query.toString());
+            discoveryPool=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"TorBox-search");t.setDaemon(true);return t;});
+            search=discoveryPool.submit(()->TorrentDiscovery.discover(searchQuery,groups));
             TorBoxClient client=new TorBoxClient(key);Set<Long> seen=new HashSet<>();
-            for(int offset=0;offset<20000&&count<3;offset+=1000){
+            Set<String> returned=new HashSet<>();
+            // Three pages leave time for global cached discovery on large Libraries.
+            for(int offset=0;offset<3000&&count<3;offset+=1000){
                 client.check();JSONArray page=client.page(offset,1000);int newItems=0;
                 for(int i=0;i<page.length()&&count<3;i++){
                     JSONObject item=page.getJSONObject(i);long id=item.optLong("id",-1);if(id<0||!seen.add(id))continue;newItems++;
@@ -52,17 +58,28 @@ public final class TorBoxProvider extends TmdbProvider {
                     found=LibraryMatcher.find(client.item(id),query,groups);
                     for(LibraryMatcher.Match match:found){
                         if(count>=3)break;
-                        try{client.check();String url=client.link(match.torrent,match.file);TorBoxClient.probe(url);callback.invoke(link(match,url));count++;}
+                        try{client.check();String url=client.link(match.torrent,match.file);TorBoxClient.probe(url);callback.invoke(link(match,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
                         catch(Exception ignored){/* Do not expose URL, token or provider error body. */}
                     }
                 }
                 if(page.length()<1000||newItems==0)break;
             }
-            outcome=count>0?"Verified media links returned":candidates==0?"No exact eligible Romanian filename found in your Library":"Matched files did not yield a verified media link";
+            if(count<3){
+                outcome="Public discovery unavailable or timed out";
+                TorrentDiscovery.Result found=search.get(13,TimeUnit.SECONDS);
+                discovered=found.received;eligible=found.candidates.size();discoveryFailed=found.failed;
+                outcome="TorBox cache verification failed or timed out";
+                CachedDiscoveryResolver.Stats stats=CachedDiscoveryResolver.resolve(found.candidates,query,groups,client,3-count,returned,(match,url)->callback.invoke(link(match,url)));
+                cached=stats.cached;candidates+=stats.exactFiles;count+=stats.links;
+            }
+            outcome=count>0?"Verified media links returned":candidates==0?"No exact eligible Romanian file found in the checked Library/cache candidates":"Matched files did not yield a verified media link";
         }catch(TorBoxClient.AuthenticationFailure invalidKey){outcome="TorBox authorization failed";TorBoxSetup.show();}
         catch(Exception ignored){/* Expected misses stay absent; no placeholder video links. */}
-        android.util.Log.i("TorBoxTV","Library lookup returned "+count+" verified file link(s)");
-        if(diagnostic)showDiagnostic(requested,scanned,candidates,count,outcome);
+        finally{if(search!=null)search.cancel(true);if(discoveryPool!=null)discoveryPool.shutdownNow();}
+        android.util.Log.i("TorBoxTV","RoDub lookup returned "+count+" verified file link(s)");
+        if(diagnostic)showDiagnostic(requested,scanned,candidates,count,outcome,discovered,eligible,cached,discoveryFailed);
+        else if(TorBoxPlugin.app!=null)TorBoxPlugin.app.getSharedPreferences("torbox_tv_options",0).edit()
+            .putString("last_lookup_summary",summary(requested,scanned,candidates,count,outcome,discovered,eligible,cached,discoveryFailed)).apply();
         return count>0;
     }
     JSONObject completeMovieQuery(JSONObject query)throws Exception {
@@ -82,15 +99,20 @@ public final class TorBoxProvider extends TmdbProvider {
         for(String k:Arrays.asList("movieName","originalTitle","releaseYear"))if(metadata.has(k))enriched.put(k,metadata.get(k));
         return enriched;
     }
-    static void showDiagnostic(String title,int scanned,int candidates,int links,String outcome){
+    static void showDiagnostic(String title,int scanned,int candidates,int links,String outcome,int discovered,int eligible,int cached,int failed){
         final android.app.Activity a=TorBoxPlugin.activity.get();if(a==null||a.isFinishing())return;
-        final String message=title+"\nLibrary items checked: "+scanned+"\nMatching RO file candidates: "+candidates+"\nVerified links: "+links+"\n\n"+outcome+"\n\nThis test uses The Matrix, not the title you previously opened. Only your own Library is searched.";
+        String previous=TorBoxPlugin.app.getSharedPreferences("torbox_tv_options",0).getString("last_lookup_summary","");
+        final String message=(previous.isEmpty()?summary(title,scanned,candidates,links,outcome,discovered,eligible,cached,failed):"LAST TITLE LOOKUP\n"+previous+"\n\nBUILT-IN TEST\n"+title+": "+links+" links. "+outcome)
+            +"\n\nThe built-in Test uses The Matrix. Normal lookups search the selected title. Cached-only registrations can appear in your TorBox Library.";
         a.runOnUiThread(()->new android.app.AlertDialog.Builder(a).setTitle("TorBox Library diagnostic").setMessage(message).setPositiveButton("OK",null).show());
+    }
+    static String summary(String title,int scanned,int candidates,int links,String outcome,int discovered,int eligible,int cached,int failed){
+        return title+"\nLibrary items checked (up to 3000): "+scanned+"\nPublic index candidates: "+discovered+"\nEligible Romanian candidates: "+eligible+"\nCached candidates: "+cached+"\nMatching RO file candidates: "+candidates+"\nVerified links: "+links+"\nDiscovery service failures: "+failed+"\n"+outcome;
     }
     static Object link(LibraryMatcher.Match m,String url)throws Exception {
         String lower=m.name.toLowerCase(Locale.ROOT);int quality=lower.contains("2160p")?2160:lower.contains("1080p")?1080:lower.contains("720p")?720:0;
         return Class.forName("com.lagradost.cloudstream3.utils.ExtractorLink")
             .getConstructor(String.class,String.class,String.class,String.class,int.class,boolean.class,Map.class,String.class)
-            .newInstance("TorBox Library",m.confidence+" | TorBox Library",url,"",quality,false,Collections.emptyMap(),null);
+            .newInstance("TorBox RoDub Finder",m.confidence+" | TorBox cached",url,"",quality,false,Collections.emptyMap(),null);
     }
 }
