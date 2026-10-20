@@ -14,7 +14,7 @@ final class CachedDiscoveryResolver {
         void probeMedia(String url)throws Exception{TorBoxClient.probe(url);}
     }
     interface Emit {void stream(LibraryMatcher.Match match,String url)throws Exception;}
-    static final class Stats {int cached,exactFiles,registered,links,failed;}
+    static final class Stats {int cached,exactFiles,registered,links,failed,obtained,media;String failure="";}
     static JSONObject cachedItem(JSONObject cache,TorrentDiscovery.Candidate candidate)throws Exception {
         JSONArray raw=cache.optJSONArray("files");if(raw==null)return null;
         JSONArray files=new JSONArray();
@@ -33,24 +33,30 @@ final class CachedDiscoveryResolver {
         JSONObject cached=api.cached(hashes);int attempts=0;
         for(TorrentDiscovery.Candidate c:candidates){
             if(stats.links>=limit||attempts>=5)break;
-            try{api.check();}catch(Exception timeout){stats.failed++;break;}
+            try{api.check();}catch(Exception timeout){stats.failed++;stats.failure="Deadline: "+TorBoxClient.safeError(timeout);break;}
             JSONObject cache=cached.optJSONObject(c.hash);if(cache==null)continue;stats.cached++;
             if(cache.has("cached")&&!cache.optBoolean("cached"))continue;
             if(!cache.optString("hash",c.hash).equalsIgnoreCase(c.hash))continue;
             JSONObject preview=cachedItem(cache,c);if(preview==null)continue;
             if(LibraryMatcher.find(preview,query,groups).isEmpty())continue;
             stats.exactFiles++;attempts++;
+            String stage="Cached-only registration";
             try {
                 // The server MUST enforce cached-only; no uncached retry exists.
                 long id=api.claimCached(c.hash);stats.registered++;
+                stage="Registered item refresh";
                 JSONObject actual=api.item(id);
-                if(!actual.optString("hash","").equalsIgnoreCase(c.hash)||actual.optLong("id",-1)!=id)continue;
-                for(LibraryMatcher.Match m:LibraryMatcher.find(actual,query,groups)){
+                if(!actual.optString("hash","").equalsIgnoreCase(c.hash)||actual.optLong("id",-1)!=id){stats.failure="Registered hash/ID mismatch";continue;}
+                List<LibraryMatcher.Match> matches=LibraryMatcher.find(actual,query,groups);
+                if(matches.isEmpty())stats.failure="Registered item is not ready or exact file no longer matches";
+                for(LibraryMatcher.Match m:matches){
                     if(stats.links>=limit)break;
                     String identity=c.hash+":"+m.file;if(returned.contains(identity))continue;
-                    String url=api.link(m.torrent,m.file);api.probeMedia(url);emit.stream(m,url);returned.add(identity);stats.links++;
+                    stage="Download-link API";String url=api.link(m.torrent,m.file);stats.obtained++;
+                    stage="Media probe";api.probeMedia(url);stats.media++;
+                    stage="Nuvio link callback";emit.stream(m,url);returned.add(identity);stats.links++;
                 }
-            }catch(Exception ignored){stats.failed++;}
+            }catch(Exception error){stats.failed++;stats.failure=stage+": "+TorBoxClient.safeError(error);}
         }
         return stats;
     }

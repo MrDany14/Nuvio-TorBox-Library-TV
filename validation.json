@@ -1,7 +1,6 @@
 {
-  "accountOperationsByDeveloper": 0,
   "limits": [
-    "Public candidates are not cached streams; authenticated cache/registration/media checks are pending user device test.",
+    "Existing matching Library files passed authenticated URL and container-header checks on desktop; cached-only acquisition and TV playback remain unverified.",
     "Filename dubbing declarations and possible trusted-group fallback, no audio-track inspection.",
     "Cached-only registrations may appear in the TorBox Library. No uncached fallback.",
     "Byte-range check cannot identify every error video or guarantee playback."
@@ -45,13 +44,24 @@
   "cachedOnlyMultipartBuilderTested": true,
   "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
   "matcherAssertions": 26,
-  "packageSha256": "2F363C1FA3E69CA3D26ED71A92D03730D820AF9540ED9D82F92E32236000FE33",
-  "version": 3,
+  "packageSha256": "584E05A0F16C2105869A16CC06FF4F2E2899814B8A7213F149257C2CD543B3B8",
+  "version": 4,
   "cachedDiscoveryAssertions": 17,
   "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
   "playbackTested": false,
   "userReportedV1SetupConnected": true,
-  "testedAt": "2026-10-20T11:41:36.1551674Z",
-  "realCredentialUsedByDeveloper": false
+  "testedAt": "2026-10-20T13:14:06.2181698Z",
+  "realCredentialUsedByDeveloper": true,
+  "accountMutationsByDeveloper": 0,
+  "linkContractAssertions": 12,
+  "authenticatedReadOnlyMediaProbe": {
+    "title": "Minions & Monsters (2026)",
+    "matchingFilesChecked": 3,
+    "downloadUrlsObtained": 3,
+    "mediaHeadersPassed": 3,
+    "runtime": "Desktop JVM using production resolver",
+    "accountMutations": 0,
+    "playback": false
+  }
 }

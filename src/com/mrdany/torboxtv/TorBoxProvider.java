@@ -27,6 +27,7 @@ public final class TorBoxProvider extends TmdbProvider {
     public Object loadLinks(String data,boolean casting,Function1 subtitles,Function1 callback,Continuation continuation){
         int count=0,scanned=0,candidates=0,discovered=0,eligible=0,cached=0,discoveryFailed=0; boolean diagnostic=false;
         String requested="",outcome="Lookup finished";
+        int obtained=0,probed=0;String lastFailure="";
         ExecutorService discoveryPool=null;Future<TorrentDiscovery.Result> search=null;
         try {
             String key=new PrivateKeyStore(TorBoxPlugin.app).read();
@@ -56,10 +57,14 @@ public final class TorBoxProvider extends TmdbProvider {
                     candidates+=found.size();
                     // Confirm current per-item completion/files rather than trusting an index flag.
                     found=LibraryMatcher.find(client.item(id),query,groups);
+                    if(found.isEmpty())lastFailure="Library refresh: item not ready or exact file no longer matches";
                     for(LibraryMatcher.Match match:found){
                         if(count>=3)break;
-                        try{client.check();String url=client.link(match.torrent,match.file);TorBoxClient.probe(url);callback.invoke(link(match,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
-                        catch(Exception ignored){/* Do not expose URL, token or provider error body. */}
+                        String stage="Download-link API";
+                        try{client.check();String url=client.link(match.torrent,match.file);obtained++;
+                            stage="Media probe";TorBoxClient.probe(url);probed++;
+                            stage="Nuvio link callback";callback.invoke(link(match,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
+                        catch(Exception error){lastFailure=stage+": "+TorBoxClient.safeError(error);}
                     }
                 }
                 if(page.length()<1000||newItems==0)break;
@@ -71,11 +76,14 @@ public final class TorBoxProvider extends TmdbProvider {
                 outcome="TorBox cache verification failed or timed out";
                 CachedDiscoveryResolver.Stats stats=CachedDiscoveryResolver.resolve(found.candidates,query,groups,client,3-count,returned,(match,url)->callback.invoke(link(match,url)));
                 cached=stats.cached;candidates+=stats.exactFiles;count+=stats.links;
+                obtained+=stats.obtained;probed+=stats.media;if(!stats.failure.isEmpty())lastFailure=stats.failure;
             }
             outcome=count>0?"Verified media links returned":candidates==0?"No exact eligible Romanian file found in the checked Library/cache candidates":"Matched files did not yield a verified media link";
-        }catch(TorBoxClient.AuthenticationFailure invalidKey){outcome="TorBox authorization failed";TorBoxSetup.show();}
-        catch(Exception ignored){/* Expected misses stay absent; no placeholder video links. */}
+        }catch(TorBoxClient.AuthenticationFailure invalidKey){outcome="TorBox authorization failed";lastFailure=TorBoxClient.safeError(invalidKey);TorBoxSetup.show();}
+        catch(Exception error){lastFailure=outcome+": "+TorBoxClient.safeError(error);}
         finally{if(search!=null)search.cancel(true);if(discoveryPool!=null)discoveryPool.shutdownNow();}
+        outcome+="\nDownload URLs obtained: "+obtained+"; media checks passed: "+probed;
+        if(!lastFailure.isEmpty())outcome+="\nLast failure: "+lastFailure;
         android.util.Log.i("TorBoxTV","RoDub lookup returned "+count+" verified file link(s)");
         if(diagnostic)showDiagnostic(requested,scanned,candidates,count,outcome,discovered,eligible,cached,discoveryFailed);
         else if(TorBoxPlugin.app!=null)TorBoxPlugin.app.getSharedPreferences("torbox_tv_options",0).edit()
