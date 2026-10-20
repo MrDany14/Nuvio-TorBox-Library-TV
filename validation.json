@@ -1,0 +1,20 @@
+{
+  "limits": [
+    "Filename Romanian dubbing declarations or possible trusted-group fallback; no audio inspection.",
+    "Media range check is not playback and cannot detect all error videos.",
+    "Conservative exact matching may omit differently numbered or ambiguous files."
+  ],
+  "realCredentialUsed": false,
+  "maskedPasswordField": true,
+  "testedAt": "2026-10-20T10:55:43.3622969Z",
+  "packageSha256": "DF9C185AB939ACCA96A707CA6BCD302328131F24ECF70339AB1CBD5EC036E22A",
+  "matcherAssertions": 22,
+  "dummyKeyRejectedAndInputCleared": true,
+  "setupDialogInsideNuvio": true,
+  "nativeRepositoryInstalled": true,
+  "nuvioVersion": "1.0.0",
+  "authenticatedLibraryTested": false,
+  "playbackTested": false,
+  "embeddedMetadataCredential": false,
+  "nuvioSdkMovieMetadataProbe": "Passed: Fight Club (1999), native Android runtime, Nuvio SDK, no embedded metadata credential."
+}

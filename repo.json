@@ -1,0 +1,8 @@
+{
+  "pluginLists": [
+    "https://raw.githubusercontent.com/MrDany14/Nuvio-TorBox-Library-TV/main/plugins.json"
+  ],
+  "name": "TorBox Library TV Test",
+  "manifestVersion": 1,
+  "description": "Native Android TV TorBox Library-only test provider; private on-device setup."
+}

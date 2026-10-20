@@ -1,0 +1,1 @@
+package com.lagradost.cloudstream3.metaproviders; public class TmdbProvider { public TmdbProvider() {} public Object load(String d,kotlin.coroutines.Continuation k){return null;} public Object loadLinks(String d,boolean c,kotlin.jvm.functions.Function1 s,kotlin.jvm.functions.Function1 f,kotlin.coroutines.Continuation k){return null;} }
