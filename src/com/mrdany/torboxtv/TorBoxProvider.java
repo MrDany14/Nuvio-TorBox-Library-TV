@@ -49,27 +49,11 @@ public final class TorBoxProvider extends TmdbProvider {
             Set<String> returned=new HashSet<>();
             // Three pages leave time for global cached discovery on large Libraries.
             for(int offset=0;offset<3000&&count<3;offset+=1000){
-                client.check();JSONArray page=client.page(offset,1000);int newItems=0;
-                for(int i=0;i<page.length()&&count<3;i++){
-                    JSONObject item=page.getJSONObject(i);long id=item.optLong("id",-1);if(id<0||!seen.add(id))continue;newItems++;
-                    scanned++;
-                    List<LibraryMatcher.Match> found=LibraryMatcher.findForMetadata(item,query,groups);if(found.isEmpty())continue;
-                    candidates+=found.size();
-                    // Confirm current per-item completion/files rather than trusting an index flag.
-                    found=LibraryMatcher.findForMetadata(client.item(id),query,groups);
-                    if(found.isEmpty())lastFailure="Library refresh: item not ready or exact file no longer matches";
-                    for(LibraryMatcher.Match match:found){
-                        if(count>=3)break;
-                        String stage="Download-link API";
-                        try{client.check();String url=client.link(match.torrent,match.file);obtained++;
-                            stage="Media probe";TorBoxClient.probe(url);probed++;
-                            stage="Audio metadata";LibraryMatcher.Match audioMatch=client.audioMatch(match,url);
-                            if(audioMatch==null){lastFailure="Audio metadata: Romanian audio not established";continue;}
-                            stage="Nuvio link callback";callback.invoke(link(audioMatch,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
-                        catch(Exception error){lastFailure=stage+": "+TorBoxClient.safeError(error);}
-                    }
-                }
-                if(page.length()<1000||newItems==0)break;
+                client.check();JSONArray page=client.page(offset,1000);
+                ParallelLibraryResolver.Stats library=ParallelLibraryResolver.resolve(page,query,groups,client,3-count,seen,returned,(match,url)->callback.invoke(link(match,url)));
+                scanned+=library.scanned;candidates+=library.candidates;count+=library.links;obtained+=library.obtained;probed+=library.media;
+                if(!library.failure.isEmpty())lastFailure=library.failure;
+                if(page.length()<1000||library.scanned==0)break;
             }
             if(count<3){
                 outcome="Public discovery unavailable or timed out";

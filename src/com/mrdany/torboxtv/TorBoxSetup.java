@@ -22,7 +22,7 @@ final class TorBoxSetup {
             EditText groups = new EditText(a); groups.setHint("Trusted release groups, comma separated");
             groups.setText(TorBoxPlugin.app.getSharedPreferences("torbox_tv_options",0).getString("groups",GROUPS));
             TextView status = new TextView(a);
-            status.setText("Searches Library plus public torrent indexes. Only cache-confirmed exact files are registered with TorBox; these may appear in your Library. No uncached downloads. Release groups mean Possible RO Dub; audio is not inspected.");
+            status.setText("Searches Library plus public torrent indexes. Only cache-confirmed exact files are registered with TorBox; these may appear in your Library. No uncached downloads. Available Matroska audio tags take priority; trusted release groups provide a Possible RO Dub fallback when metadata is missing.");
             layout.addView(status); layout.addView(key); layout.addView(groups);
             AlertDialog dialog = new AlertDialog.Builder(a).setTitle("TorBox Library TV — private setup")
                 .setView(layout).setPositiveButton("Save and test",null).setNegativeButton("Cancel",null)

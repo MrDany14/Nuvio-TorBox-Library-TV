@@ -7,9 +7,9 @@
     ],
     "status": 1,
     "repositoryUrl": "https://github.com/MrDany14/Nuvio-TorBox-Library-TV",
-    "version": 7,
+    "version": 8,
     "internalName": "TorBoxLibraryTVTest",
-    "fileSize": 28093,
+    "fileSize": 31374,
     "description": "Library plus Torrentio/Knaben discovery. Exact files, cached-only TorBox registration, verified media links.",
     "tvTypes": [
       "Movie",

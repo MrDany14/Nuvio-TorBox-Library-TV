@@ -13,9 +13,13 @@ final class TorBoxClient extends CachedDiscoveryResolver.Gateway {
     interface Transport {HttpURLConnection open(URL url)throws Exception;}
     private final String key;
     private final Transport transport;
+    private final String account;
+    private final java.util.concurrent.ConcurrentHashMap<String,String> fileIdentities=new java.util.concurrent.ConcurrentHashMap<>();
     final long deadline=System.nanoTime()+40000000000L;
     TorBoxClient(String key){this(key,url->(HttpURLConnection)url.openConnection());}
-    TorBoxClient(String key,Transport transport){this.key=key;this.transport=transport;}
+    TorBoxClient(String key,Transport transport){this.key=key;this.transport=transport;this.account=digest(key);}
+    static String digest(String text){try{byte[] hash=java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8));StringBuilder out=new StringBuilder();for(byte b:hash)out.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return out.toString();}catch(Exception e){throw new IllegalStateException("SHA-256 unavailable");}}
+    static long memoTime(){return System.nanoTime()/1000000L;}
     static String safeError(Exception e){
         if(e instanceof Failure)return ((Failure)e).code;
         if(e instanceof AuthenticationFailure)return "API authorization rejected (401/403)";
@@ -40,7 +44,7 @@ final class TorBoxClient extends CachedDiscoveryResolver.Gateway {
         try {
             if(body!=null){c.setRequestMethod("POST");c.setDoOutput(true);c.setRequestProperty("Content-Type",contentType);c.setFixedLengthStreamingMode(body.length);try(OutputStream out=c.getOutputStream()){out.write(body);}}
             int status=c.getResponseCode();
-            if(status==401||status==403)throw new AuthenticationFailure();
+            if(status==401||status==403){LookupMemo.clear(account);throw new AuthenticationFailure();}
             if(status!=200&&status!=201)throw new Failure("API HTTP "+status);
             ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[8192];int n;
             try(InputStream in=c.getInputStream()){while((n=in.read(b))!=-1){check();out.write(b,0,n);if(out.size()>24*1024*1024)throw new IOException("Library response too large");}}
@@ -50,8 +54,24 @@ final class TorBoxClient extends CachedDiscoveryResolver.Gateway {
         } finally {c.disconnect();}
     }
     JSONArray page(int offset,int limit)throws Exception {
+        check();String memoKey=account+":"+offset+":"+limit;String previous=limit==1000?LookupMemo.page(memoKey,memoTime()):null;if(previous!=null)return new JSONArray(previous);
         Object d=api("mylist?bypass_cache=true&offset="+offset+"&limit="+limit,true).opt("data");
-        if(!(d instanceof JSONArray))throw new IOException("Unexpected Library response");return (JSONArray)d;
+        if(!(d instanceof JSONArray))throw new IOException("Unexpected Library response");if(limit==1000)LookupMemo.page(memoKey,snapshot((JSONArray)d).toString(),memoTime());return (JSONArray)d;
+    }
+    /** Retain only matcher input; every selected item is refreshed before linking. */
+    static JSONArray snapshot(JSONArray items)throws Exception{
+        JSONArray result=new JSONArray();
+        for(int i=0;i<items.length();i++){
+            JSONObject original=items.getJSONObject(i),item=new JSONObject();
+            for(String field:new String[]{"id","name","hash","download_finished","download_present"})if(original.has(field))item.put(field,original.get(field));
+            JSONArray originals=original.optJSONArray("files"),files=new JSONArray();
+            if(originals!=null)for(int f=0;f<originals.length();f++){
+                JSONObject source=originals.optJSONObject(f);if(source==null)continue;JSONObject file=new JSONObject();
+                for(String field:new String[]{"id","name","short_name","size"})if(source.has(field))file.put(field,source.get(field));files.put(file);
+            }
+            item.put("files",files);result.put(item);
+        }
+        return result;
     }
     JSONObject cached(java.util.List<String> hashes)throws Exception {
         StringBuilder query=new StringBuilder("checkcached?format=object&list_files=true");
@@ -75,9 +95,15 @@ final class TorBoxClient extends CachedDiscoveryResolver.Gateway {
     }
     JSONObject item(long id)throws Exception {
         Object d=api("mylist?bypass_cache=true&id="+id,true).opt("data");
-        if(d instanceof JSONObject)return (JSONObject)d;
-        if(d instanceof JSONArray&&((JSONArray)d).length()==1)return ((JSONArray)d).getJSONObject(0);
-        throw new IOException("Library item unavailable");
+        JSONObject item=d instanceof JSONObject?(JSONObject)d:d instanceof JSONArray&&((JSONArray)d).length()==1?((JSONArray)d).getJSONObject(0):null;
+        if(item==null)throw new IOException("Library item unavailable");
+        JSONArray files=item.optJSONArray("files");if(files!=null)for(int i=0;i<files.length();i++){JSONObject f=files.optJSONObject(i);if(f!=null)fileIdentities.put(id+":"+f.optLong("id",-1),account+":"+digest(item.optString("hash","")+":"+id+":"+f.optLong("id",-1)+":"+f.optString("hash","")+":"+f.optLong("size",0)+":"+f.optString("name",f.optString("short_name",""))));}
+        return item;
+    }
+    LibraryMatcher.Match audioMatch(LibraryMatcher.Match match,String url){
+        String identity=fileIdentities.get(match.torrent+":"+match.file);AudioLanguageMetadata.Result result=identity==null?null:LookupMemo.audio(identity,memoTime());
+        if(result==null){result=AudioLanguageMetadata.inspect(url);if(identity!=null)LookupMemo.audio(identity,result,memoTime());}
+        return AudioLanguageMetadata.apply(match,result);
     }
     String link(long torrent,long file)throws Exception {
         Object d=api("requestdl?token="+URLEncoder.encode(key,"UTF-8")+"&torrent_id="+torrent+"&file_id="+file+"&zip_link=false&redirect=false&append_name=false",true).opt("data");

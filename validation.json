@@ -1,6 +1,6 @@
 {
   "limits": [
-    "Authenticated existing Library URL/media/audio checks passed on desktop; v7 TV behavior and authenticated cached-only acquisition remain unverified.",
+    "Authenticated existing Library URL/media/audio checks and parallel benchmark passed on desktop; v8 Mi Box timing and authenticated cached-only acquisition remain unverified.",
     "Matroska audio language tags inspected in bounded 256 KiB headers; unknown/unsupported metadata retains filename/group fallback; no speech recognition.",
     "Cached-only registrations may appear in the TorBox Library. No uncached fallback.",
     "Byte-range check cannot identify every error video or guarantee playback."
@@ -44,14 +44,14 @@
   "cachedOnlyMultipartBuilderTested": true,
   "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
   "matcherAssertions": 30,
-  "packageSha256": "3DFF46FE147E031AA11DE9BD68F24B6408A5300DBB7B177EDA1475069CDD2ACC",
-  "version": 7,
+  "packageSha256": "F2EE305E4D7E229BAC89ACDB5FDDDCDB8EE79AF24AF4D56DA8296033C4B792FF",
+  "version": 8,
   "cachedDiscoveryAssertions": 30,
   "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
   "playbackTested": false,
   "userReportedV1SetupConnected": true,
-  "testedAt": "2026-10-20T13:46:34.6058405Z",
+  "testedAt": "2026-10-20T14:03:00.4957936Z",
   "realCredentialUsedByDeveloper": true,
   "accountMutationsByDeveloper": 0,
   "linkContractAssertions": 12,
@@ -91,5 +91,17 @@
       "OldT"
     ],
     "previouslyExcludedByGroupFilter": 2
+  },
+  "parallelCacheAssertions": 16,
+  "blueyBenchmark": {
+    "runtime": "Desktop JVM using production parallel resolver",
+    "priorSequentialMs": 10731,
+    "coldMs": 5840,
+    "warmMs": 1815,
+    "linksPerRun": 3,
+    "allMetadataRomanian": true,
+    "accountMutations": 0,
+    "playback": false,
+    "miBoxTimingVerified": false
   }
 }
