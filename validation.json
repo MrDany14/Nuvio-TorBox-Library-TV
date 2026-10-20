@@ -1,7 +1,7 @@
 {
   "limits": [
-    "Existing matching Library files passed authenticated URL and container-header checks on desktop; cached-only acquisition and TV playback remain unverified.",
-    "Filename dubbing declarations and possible trusted-group fallback, no audio-track inspection.",
+    "Authenticated existing Library URL/media/audio checks passed on desktop; v5 TV behavior and authenticated cached-only acquisition remain unverified.",
+    "Matroska audio language tags inspected in bounded 256 KiB headers; unknown/unsupported metadata retains filename/group fallback; no speech recognition.",
     "Cached-only registrations may appear in the TorBox Library. No uncached fallback.",
     "Byte-range check cannot identify every error video or guarantee playback."
   ],
@@ -44,14 +44,14 @@
   "cachedOnlyMultipartBuilderTested": true,
   "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
   "matcherAssertions": 26,
-  "packageSha256": "584E05A0F16C2105869A16CC06FF4F2E2899814B8A7213F149257C2CD543B3B8",
-  "version": 4,
-  "cachedDiscoveryAssertions": 17,
+  "packageSha256": "6FFCB3CC32D70DC003BE84473EC4BFF54169BEA0B621EF4C4D6416CE84429735",
+  "version": 5,
+  "cachedDiscoveryAssertions": 18,
   "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
   "playbackTested": false,
   "userReportedV1SetupConnected": true,
-  "testedAt": "2026-10-20T13:14:06.2181698Z",
+  "testedAt": "2026-10-20T13:25:19.7188128Z",
   "realCredentialUsedByDeveloper": true,
   "accountMutationsByDeveloper": 0,
   "linkContractAssertions": 12,
@@ -63,5 +63,17 @@
     "runtime": "Desktop JVM using production resolver",
     "accountMutations": 0,
     "playback": false
+  },
+  "audioMetadataAssertions": 17,
+  "userReportedV4Playback": true,
+  "authenticatedAudioCheck": {
+    "runtime": "Desktop JVM using production filter",
+    "matchingFiles": 3,
+    "englishOnly": 3,
+    "rejected": 3,
+    "accountMutations": 0,
+    "playback": false,
+    "independentMediaInfoFiles": 2,
+    "independentAgreement": true
   }
 }

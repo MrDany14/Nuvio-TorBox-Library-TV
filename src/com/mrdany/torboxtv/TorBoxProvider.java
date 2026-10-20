@@ -63,7 +63,9 @@ public final class TorBoxProvider extends TmdbProvider {
                         String stage="Download-link API";
                         try{client.check();String url=client.link(match.torrent,match.file);obtained++;
                             stage="Media probe";TorBoxClient.probe(url);probed++;
-                            stage="Nuvio link callback";callback.invoke(link(match,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
+                            stage="Audio metadata";LibraryMatcher.Match audioMatch=client.audioMatch(match,url);
+                            if(audioMatch==null){lastFailure="Audio metadata: no Romanian audio track";continue;}
+                            stage="Nuvio link callback";callback.invoke(link(audioMatch,url));returned.add(item.optString("hash","").toLowerCase(Locale.ROOT)+":"+match.file);count++;}
                         catch(Exception error){lastFailure=stage+": "+TorBoxClient.safeError(error);}
                     }
                 }

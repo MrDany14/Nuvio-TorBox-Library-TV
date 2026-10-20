@@ -12,7 +12,7 @@ public final class CachedDiscoveryTest {
  static JSONObject query()throws Exception{return new JSONObject().put("movieName","Peppa Pig").put("season",4).put("episode",15);}
  static JSONObject file(int id,String name)throws Exception{return new JSONObject().put("id",id).put("name",name).put("size",36500000);}
  static final class Fake extends CachedDiscoveryResolver.Gateway {
-  JSONObject cache,actual;int claims,linkCalls,emitted;long usedFile=-1;boolean claimFails,probeFails;
+  JSONObject cache,actual;int claims,linkCalls,emitted;long usedFile=-1;boolean claimFails,probeFails,englishAudio;
   Fake()throws Exception{
    cache=new JSONObject().put(HASH,new JSONObject().put("hash",HASH).put("name",TITLE).put("files",new JSONArray().put(file(777,FILE))));
    actual=new JSONObject().put("id",13).put("hash",HASH).put("name",TITLE).put("download_finished",true).put("download_present",true).put("files",new JSONArray().put(file(42,FILE)));
@@ -22,6 +22,7 @@ public final class CachedDiscoveryTest {
   JSONObject item(long id){return actual;}
   String link(long torrent,long file){linkCalls++;usedFile=file;return "https://example.invalid/video.mkv";}
   void probeMedia(String url)throws Exception{if(probeFails)throw new Exception("Media error");}
+  LibraryMatcher.Match audioMatch(LibraryMatcher.Match m,String url){return englishAudio?null:m;}
   void check(){}
  }
  static CachedDiscoveryResolver.Stats run(Fake f)throws Exception{return CachedDiscoveryResolver.resolve(Collections.singletonList(new TorrentDiscovery.Candidate(HASH,TITLE)),query(),"RODubbed",f,3,new HashSet<>(),(m,u)->f.emitted++);}
@@ -36,6 +37,7 @@ public final class CachedDiscoveryTest {
   Fake replacedFile=new Fake();replacedFile.actual.getJSONArray("files").getJSONObject(0).put("name","Peppa.Pig.S04E16.RODubbed.mkv");run(replacedFile);check(replacedFile.linkCalls==0,"fresh file match rechecked");
   Fake wrongActualHash=new Fake();wrongActualHash.actual.put("hash","bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");run(wrongActualHash);check(wrongActualHash.linkCalls==0,"fresh torrent hash rechecked");
   Fake badMedia=new Fake();badMedia.probeFails=true;run(badMedia);check(badMedia.emitted==0,"bad media response never offered");
+  Fake english=new Fake();english.englishAudio=true;run(english);check(english.emitted==0,"known non-Romanian audio rejected before callback");
   String body=new String(TorBoxClient.cachedOnlyBody(HASH,"TestBoundary"),"UTF-8");check(body.contains("name=\"add_only_if_cached\"\r\n\r\ntrue\r\n"),"server-side cached-only flag in actual multipart builder");check(body.contains("name=\"allow_zip\"\r\n\r\nfalse\r\n"),"zip fallback disabled");
   JSONObject errorVideo=new JSONObject().put("streams",new JSONArray().put(new JSONObject().put("url","https://example.invalid/error.mp4").put("title","Peppa.Pig.S04.RODubbed")));
   check(TorrentDiscovery.torrentio(errorVideo).isEmpty(),"URL-only placeholder videos not treated as torrents");

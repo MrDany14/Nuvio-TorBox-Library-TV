@@ -12,6 +12,7 @@ final class CachedDiscoveryResolver {
         abstract String link(long torrent,long file)throws Exception;
         abstract void check()throws Exception;
         void probeMedia(String url)throws Exception{TorBoxClient.probe(url);}
+        LibraryMatcher.Match audioMatch(LibraryMatcher.Match match,String url){return AudioLanguageMetadata.apply(match,AudioLanguageMetadata.inspect(url));}
     }
     interface Emit {void stream(LibraryMatcher.Match match,String url)throws Exception;}
     static final class Stats {int cached,exactFiles,registered,links,failed,obtained,media;String failure="";}
@@ -54,7 +55,9 @@ final class CachedDiscoveryResolver {
                     String identity=c.hash+":"+m.file;if(returned.contains(identity))continue;
                     stage="Download-link API";String url=api.link(m.torrent,m.file);stats.obtained++;
                     stage="Media probe";api.probeMedia(url);stats.media++;
-                    stage="Nuvio link callback";emit.stream(m,url);returned.add(identity);stats.links++;
+                    stage="Audio metadata";LibraryMatcher.Match audioMatch=api.audioMatch(m,url);
+                    if(audioMatch==null){stats.failure="Audio metadata: no Romanian audio track";continue;}
+                    stage="Nuvio link callback";emit.stream(audioMatch,url);returned.add(identity);stats.links++;
                 }
             }catch(Exception error){stats.failed++;stats.failure=stage+": "+TorBoxClient.safeError(error);}
         }
