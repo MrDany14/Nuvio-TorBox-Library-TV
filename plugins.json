@@ -7,9 +7,9 @@
     ],
     "status": 1,
     "repositoryUrl": "https://github.com/MrDany14/Nuvio-TorBox-Library-TV",
-    "version": 1,
+    "version": 2,
     "internalName": "TorBoxLibraryTVTest",
-    "fileSize": 14528,
+    "fileSize": 18213,
     "description": "Exact Library file matching. Test opens private key setup. No torrent creation.",
     "tvTypes": [
       "Movie",

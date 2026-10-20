@@ -12,6 +12,8 @@ Select **Test** for **TorBox Library [TV Test]**. With no saved key, a private s
 
 After it says Connected, close the dialog. Open the desired title/episode and look for this provider. First real-account cases to test: Peppa Pig S4E15, and Mickey Mouse Funhouse (must never return Mickey Mouse Clubhouse).
 
+Version 2 fixes the native Test input, which omits a movie year: the plugin now completes that metadata through Nuvio's SDK before matching. Test also opens a summary with the Library-item count, matching RO file candidates and verified links, without showing credentials or download URLs. Nuvio's Test always requests The Matrix; zero matches can be correct if that eligible movie is absent from your Library. Test does not check the movie you last opened.
+
 The key is stored encrypted using Android Keystore in Nuvio's app storage. It is sent only to TorBox's fixed API endpoint. This is not isolation from other code installed in the same Nuvio app. No hosted resolver, extra hosting account or running PC is required after installation. TorBox account/service requirements still apply.
 
 If a saved key is revoked or rejected, the setup dialog reopens on the next lookup. The dialog includes Forget key. Settings are device-local and are not synchronized to another device.
@@ -40,4 +42,4 @@ Use a JDK with javac/jar, an official Android platform android.jar and the Andro
 
 Stubs compile against Nuvio's existing Kotlin/Cloudstream classes; they are deliberately excluded from the packaged DEX. The package contains only classes.dex and manifest.json. Matcher fixtures under tests use org.json (provide a desktop org.json jar when running outside Android).
 
-API reference: [TorBox torrent API](https://github.com/TorBox-App/torbox-sdk-js/blob/main/documentation/services/TorrentsService.md). Metadata is loaded through Nuvio's existing TmdbProvider SDK; this repository does not embed a TMDB API credential. Native Test queries without movie-year metadata may show zero results even when a regular title lookup can match. Matching uses the SDK's English display title; unsupported localized-only filenames can be missed.
+API reference: [TorBox torrent API](https://github.com/TorBox-App/torbox-sdk-js/blob/main/documentation/services/TorrentsService.md). Metadata is loaded through Nuvio's existing TmdbProvider SDK; this repository does not embed a TMDB API credential. Matching uses the SDK's English display title; unsupported localized-only filenames can be missed.

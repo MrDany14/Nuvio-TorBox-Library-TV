@@ -7,7 +7,7 @@
   "realCredentialUsed": false,
   "maskedPasswordField": true,
   "testedAt": "2026-10-20T10:55:43.3622969Z",
-  "packageSha256": "DF9C185AB939ACCA96A707CA6BCD302328131F24ECF70339AB1CBD5EC036E22A",
+  "packageSha256": "DC95BF16CBFEC5603CC356F84FE62EA1E538C3C867C6B0F27ADF567624548F78",
   "matcherAssertions": 22,
   "dummyKeyRejectedAndInputCleared": true,
   "setupDialogInsideNuvio": true,
@@ -16,5 +16,9 @@
   "authenticatedLibraryTested": false,
   "playbackTested": false,
   "embeddedMetadataCredential": false,
-  "nuvioSdkMovieMetadataProbe": "Passed: Fight Club (1999), native Android runtime, Nuvio SDK, no embedded metadata credential."
+  "nuvioSdkMovieMetadataProbe": "Passed: Fight Club (1999), native Android runtime, Nuvio SDK, no embedded metadata credential.",
+  "version": 2,
+  "diagnosticMovieMetadata": "Passed in native Android runtime: Matrix TMDB 603 completed to 1999 without TorBox credentials.",
+  "userReportedSetupConnected": true,
+  "scope": "Own torrent Library only; global discovery remains unimplemented."
 }
