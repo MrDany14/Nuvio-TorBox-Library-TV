@@ -49,7 +49,19 @@ final class TorrentDiscovery {
         List<String> aliases=new ArrayList<>();for(String k:Arrays.asList("movieName","originalTitle","localTitle")){String s=query.optString(k,"");if(!s.isEmpty())aliases.add(s);}
         boolean series=query.optInt("season",-1)>=0&&query.optInt("episode",-1)>0;
         if(!series&&query.optInt("releaseYear",0)<=0)return false;
+        if(series&&!episodeCandidate(c.title,query.optInt("season"),query.optInt("episode")))return false;
         return LibraryMatcher.title(c.title,aliases,query.optInt("releaseYear",0),series)&&LibraryMatcher.audio(c.title,groups)!=null;
+    }
+    /** Exclude explicit wrong episodes/seasons BEFORE the bounded cache shortlist.
+     * Season and complete-series packs remain candidates for exact-file checks. */
+    static boolean episodeCandidate(String title,int season,int episode){
+        if(java.util.regex.Pattern.compile("(?i)(?<![a-z0-9])(?:s\\d{1,2}[ ._-]*e\\d{1,3}|\\d{1,2}x\\d{1,3})(?![0-9])").matcher(title).find())return LibraryMatcher.episode(title,season,episode);
+        java.util.regex.Matcher range=java.util.regex.Pattern.compile("(?i)(?<![a-z0-9])s(\\d{1,2})[ ._]*-[ ._]*s?(\\d{1,2})(?![a-z0-9])").matcher(title);
+        while(range.find())if(season>=Integer.parseInt(range.group(1))&&season<=Integer.parseInt(range.group(2)))return true;
+        java.util.regex.Matcher marker=java.util.regex.Pattern.compile("(?i)(?<![a-z0-9])(?:s|season[ ._-]*|sezonul[ ._-]*)(\\d{1,2})(?![a-z0-9])").matcher(title);
+        boolean explicitSeason=false;
+        while(marker.find()){explicitSeason=true;if(Integer.parseInt(marker.group(1))==season)return true;}
+        return !explicitSeason;
     }
     static Result discover(JSONObject query,String groups)throws Exception {
         ExecutorService pool=Executors.newFixedThreadPool(2,r->{Thread t=new Thread(r,"TorBox-discovery");t.setDaemon(true);return t;});

@@ -1,4 +1,4 @@
-# TorBox RoDub Finder TV — test v5
+# TorBox RoDub Finder TV — test v6
 
 Native Nuvio Android TV provider: your TorBox Library plus public torrent discovery, followed by exact-file and cached-media verification. No external resolver hosting or running PC is required. Existing RoDubbed, AIOStreams and catalog/TMDB lists are unchanged.
 
@@ -8,7 +8,7 @@ Add this repository in Settings → Content & Discovery → Plugins:
 
 https://raw.githubusercontent.com/MrDany14/Nuvio-TorBox-Library-TV/main/repo.json
 
-For an existing installation, refresh this repository. The provider should show **TorBox RoDub Finder [TV Test], Version 5**. Its internal ID and encrypted storage namespace are unchanged, preserving the saved key. Enable plugin providers globally and enable this provider.
+For an existing installation, refresh this repository. The provider should show **TorBox RoDub Finder [TV Test], Version 6**. Its internal ID and encrypted storage namespace are unchanged, preserving the saved key. Enable plugin providers globally and enable this provider.
 
 First setup: select **Test**, enter your TorBox API key privately in the on-device dialog, then **Save and test**. No TMDB key is required. Never put the TorBox key in chat, GitHub, installer URLs or screenshots.
 
@@ -39,7 +39,7 @@ TorBox credentials are encrypted with Android Keystore AES-GCM in Nuvio app stor
 
 ## Verification/build
 
-26 matcher assertions, 18 fake-gateway assertions, 12 link-contract assertions and 17 audio-metadata assertions cover exact titles/episodes, stale/missing cache, actual file IDs, failed media, no uncached fallback, the real multipart cached-only flag, Romanian audio versus subtitles, IETF tags, missing/truncated metadata, and English-only rejection. Native Android SDK metadata and live public discovery tested Minions & Monsters, Peppa S4E15 and Funhouse S1E1 without credentials/account operations. Counts/limits: validation.json.
+26 matcher assertions, 25 fake-gateway assertions, 12 link-contract assertions and 17 audio-metadata assertions cover exact titles/episodes, stale/missing cache, actual file IDs, failed media, no uncached fallback, the real multipart cached-only flag, Romanian audio versus subtitles, IETF tags, missing/truncated metadata, and English-only rejection. Native Android SDK metadata and live public discovery tested Minions & Monsters, Peppa S4E15 and Funhouse S1E1 without credentials/account operations. Counts/limits: validation.json.
 
 Build with a JDK, official Android android.jar and D8/R8:
 
@@ -55,4 +55,7 @@ References: [TorBox API](https://api-docs.torbox.app/), [TorBox OpenAPI](https:/
 Version 4 corrects URL validation that wrongly rejected TorBox-issued CDN links containing an access credential or using a domain outside torbox.app. It also aligns the download-link bearer header with Nuvio's native integration and reports whether failure occurred at link creation, media verification, or the Nuvio callback. Full returned URLs and tokens remain absent from diagnostics.
 
 Version 5 adds bounded Matroska audio-language validation. See the [Matroska track specification](https://www.matroska.org/technical/elements.html) for TrackType, Language and LanguageBCP47.
+
+
+Version 6 rejects explicitly wrong episodes and seasons before the 50-candidate cache shortlist, retaining season packs and complete-series packs for exact-file checks. This prevents unrelated episodes from consuming the discovery limit; it does not guarantee additional Romanian releases exist in the current indexes.
 

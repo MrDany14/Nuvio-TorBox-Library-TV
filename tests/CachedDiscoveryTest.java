@@ -44,6 +44,14 @@ public final class CachedDiscoveryTest {
   JSONObject malformed=new JSONObject().put("streams",new JSONArray().put(new JSONObject().put("infoHash","invalid").put("title",TITLE)));
   check(TorrentDiscovery.torrentio(malformed).isEmpty(),"malformed hash rejected");
   check(!TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Mickey.Mouse.Clubhouse.S01.RODubbed"),new JSONObject().put("movieName","Mickey Mouse Funhouse").put("season",1).put("episode",1),"RODubbed"),"wrong series rejected during discovery too");
+  JSONObject bluey=new JSONObject().put("movieName","Bluey").put("season",1).put("episode",1);
+  check(!TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.2018.S03E49.1080p-NTb"),bluey,"NTb"),"wrong episode excluded before cache shortlist cap");
+  check(TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.2018.S01E01.1080p-NTb"),bluey,"NTb"),"exact episode eligible before cache shortlist cap");
+  check(TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.S01.COMPLETE.RODubbed"),bluey,"RODubbed"),"requested season pack remains eligible");
+  check(!TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.S03.COMPLETE.RODubbed"),bluey,"RODubbed"),"wrong season pack excluded before shortlist cap");
+  check(TorrentDiscovery.eligible(new TorrentDiscovery.Candidate(HASH,"Bluey.COMPLETE.RODubbed"),bluey,"RODubbed"),"complete-series pack still reaches exact-file validation");
+  check(TorrentDiscovery.episodeCandidate("Bluey.S01-S03.COMPLETE.RODubbed",2,1),"season inside multi-season pack range remains eligible");
+  check(!TorrentDiscovery.episodeCandidate("Bluey.S01-S03.COMPLETE.RODubbed",4,1),"season outside pack range rejected");
   System.out.println("Cached discovery: "+assertions+" checks passed; fake account gateway, no credentials or real account operations.");
  }
 }

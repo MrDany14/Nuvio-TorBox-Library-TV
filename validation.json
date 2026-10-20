@@ -44,14 +44,14 @@
   "cachedOnlyMultipartBuilderTested": true,
   "cachedOnlyServerFlagVerifiedInOfficialOpenApi": true,
   "matcherAssertions": 26,
-  "packageSha256": "6FFCB3CC32D70DC003BE84473EC4BFF54169BEA0B621EF4C4D6416CE84429735",
-  "version": 5,
-  "cachedDiscoveryAssertions": 18,
+  "packageSha256": "21679470487DFAA9B28CFD6BD185BBEBD942A613E0303D8A25169D9E6B69A21E",
+  "version": 6,
+  "cachedDiscoveryAssertions": 25,
   "authenticatedV3AcquisitionTested": false,
   "nuvioVersion": "1.0.0",
   "playbackTested": false,
   "userReportedV1SetupConnected": true,
-  "testedAt": "2026-10-20T13:25:19.7188128Z",
+  "testedAt": "2026-10-20T13:41:40.5926874Z",
   "realCredentialUsedByDeveloper": true,
   "accountMutationsByDeveloper": 0,
   "linkContractAssertions": 12,
@@ -75,5 +75,16 @@
     "playback": false,
     "independentMediaInfoFiles": 2,
     "independentAgreement": true
+  },
+  "authenticatedBlueyReadOnlyCheck": {
+    "title": "Bluey S1E1",
+    "matchingLibraryFiles": 2,
+    "romanianAudioTags": 2,
+    "mediaHeadersPassed": 2,
+    "accountMutations": 0,
+    "playback": false,
+    "publicRawCandidates": 373,
+    "eligibleAfterEpisodeFiltering": 0,
+    "runtime": "Desktop JVM using production filter"
   }
 }
